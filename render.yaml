@@ -1,0 +1,20 @@
+# Render Blueprint — Deploy 100% gratuito (sem cartão de crédito)
+# Documentação: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: price-hunter
+    runtime: python
+    plan: free
+    buildCommand: ""
+    startCommand: python3 run.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+      - key: PRICE_HUNTER_ENV
+        value: production
+      - key: PRICE_HUNTER_DB_BACKEND
+        value: sqlite
+      - key: PRICE_HUNTER_SECRET_KEY
+        generateValue: true

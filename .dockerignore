@@ -1,0 +1,12 @@
+data/
+.env
+__pycache__/
+*.pyc
+*.pyo
+.git/
+tests/
+docs/
+supabase/
+*.db
+*.db-wal
+*.db-shm

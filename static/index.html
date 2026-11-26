@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Price Hunter — Inteligência de Preços e Oportunidades por CEP</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <button type="button" class="brand" id="btn-home" aria-label="Price Hunter Início">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#0F172A"/>
+            <circle cx="13" cy="13" r="6.5" stroke="#10B981" stroke-width="2.4"/>
+            <path d="M18 18L23 23" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M10.5 14L12.5 11.5L14.5 13.5L16.5 10.5" stroke="#F8FAFC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Price Hunter</strong>
+          <small>Inteligência de compras por CEP</small>
+        </span>
+      </button>
+
+      <nav class="nav-actions" aria-label="Navegação principal">
+        <button type="button" class="btn btn-ghost" id="btn-providers">
+          Fontes &amp; APIs
+        </button>
+        <button type="button" class="btn btn-ghost" id="btn-favorites-nav">
+          Favoritos <span class="pill-count hidden" id="fav-count">0</span>
+        </button>
+        <button type="button" class="btn btn-ghost hidden" id="btn-profile">
+          Perfil
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-auth">
+          Entrar
+        </button>
+        <button type="button" class="btn btn-ghost hidden" id="btn-logout">
+          Sair
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero + Barra de Busca Persistente -->
+    <section class="hero" id="hero-section">
+      <div class="container">
+        <div class="hero-copy" id="hero-copy">
+          <span class="hero-kicker">Comparação real de preço, frete, prazo e proximidade</span>
+          <h1>Encontre a melhor oportunidade real de compra para o seu CEP.</h1>
+          <p>
+            Não olhamos apenas o preço anunciado. Calculamos frete, prazo de entrega, condição,
+            confiabilidade da loja e o <strong>Price Hunter Opportunity Score</strong> com total transparência.
+          </p>
+        </div>
+
+        <form class="search-shell" id="search-form" novalidate>
+          <div class="mode-tabs" role="tablist" aria-label="Condição desejada">
+            <button type="button" class="mode-tab active" data-mode="all" role="tab" aria-selected="true">
+              Todos
+            </button>
+            <button type="button" class="mode-tab" data-mode="new" role="tab" aria-selected="false">
+              Produtos Novos
+            </button>
+            <button type="button" class="mode-tab" data-mode="used" role="tab" aria-selected="false">
+              Usados &amp; Seminovos
+            </button>
+          </div>
+
+          <div class="search-grid">
+            <div class="field field-query">
+              <label for="input-query">O que você procura?</label>
+              <input
+                type="search"
+                id="input-query"
+                name="q"
+                placeholder="Ex.: Ryzen 5 5600, iPhone 15, Smart TV 55 4K, Geladeira..."
+                autocomplete="off"
+                required
+              />
+            </div>
+
+            <div class="field field-cep">
+              <label for="input-cep">Seu CEP <span class="req">*</span></label>
+              <input
+                type="text"
+                id="input-cep"
+                name="cep"
+                inputmode="numeric"
+                maxlength="9"
+                placeholder="01310-100"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-search" id="btn-submit-search">
+              Buscar oportunidades
+            </button>
+          </div>
+
+          <div class="search-meta-bar">
+            <div class="cep-status" id="cep-status">
+              Informe um CEP brasileiro para simular frete e proximidade.
+            </div>
+            <button type="button" class="link-btn" id="btn-weights">
+              Personalizar pesos do Score
+            </button>
+          </div>
+        </form>
+
+        <div class="alert alert-error hidden" id="search-error" role="alert"></div>
+      </div>
+    </section>
+
+    <!-- View: Home -->
+    <section class="container view-section" id="view-home">
+      <div class="home-block">
+        <div class="section-head">
+          <h2>Categorias populares</h2>
+          <span class="muted">Pesquisa direta em fontes reais ativas</span>
+        </div>
+        <div class="category-grid" id="categories-grid"></div>
+      </div>
+
+      <div class="home-two-col">
+        <div class="home-block card">
+          <div class="section-head">
+            <h3>Pesquisados recentemente</h3>
+          </div>
+          <div id="recent-searches-list" class="recent-list">
+            <p class="muted">Suas pesquisas recentes aparecerão aqui.</p>
+          </div>
+        </div>
+
+        <div class="home-block card">
+          <div class="section-head">
+            <h3>Fontes conectadas agora</h3>
+            <button type="button" class="link-btn" id="btn-open-providers-home">Ver detalhes</button>
+          </div>
+          <div id="home-providers-summary" class="provider-pills"></div>
+          <p class="muted small-note">
+            O Price Hunter exibe apenas ofertas reais retornadas pelas APIs oficiais ativas. Nunca exibimos ofertas fictícias.
+          </p>
+        </div>
+      </div>
+
+      <div class="home-block hidden" id="home-observed-block">
+        <div class="section-head">
+          <h3>Últimas ofertas reais observadas</h3>
+          <span class="muted">Registradas nas pesquisas recentes deste ambiente</span>
+        </div>
+        <div class="observed-grid" id="home-observed-grid"></div>
+      </div>
+    </section>
+
+    <!-- View: Resultados de Pesquisa -->
+    <section class="container view-section hidden" id="view-results">
+      <div class="results-banner hidden" id="loading-state">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <strong>Consultando fontes reais e simulando frete para o seu CEP...</strong>
+          <p class="muted">Normalizando produtos e calculando o Price Hunter Opportunity Score.</p>
+        </div>
+      </div>
+
+      <div id="results-content" class="hidden">
+        <!-- Barra de transparência de fontes + localização -->
+        <div class="intelligence-strip" id="intelligence-strip"></div>
+
+        <!-- Alertas / resultados parciais -->
+        <div id="results-warnings" class="warnings-stack"></div>
+
+        <!-- Comparativo Preço vs Entrega -->
+        <div id="tradeoff-card" class="tradeoff-card hidden"></div>
+
+        <div class="results-toolbar">
+          <div class="results-count-wrap">
+            <h2 id="results-heading">Resultados</h2>
+            <span class="muted" id="results-subcount"></span>
+          </div>
+          <div class="toolbar-controls">
+            <button type="button" class="btn btn-outline mobile-only" id="btn-toggle-filters">
+              Filtros
+            </button>
+            <label class="sort-label" for="select-sort">
+              <span>Ordenar:</span>
+              <select id="select-sort">
+                <option value="opportunity">Maior oportunidade (Score)</option>
+                <option value="final_price_asc">Menor preço final</option>
+                <option value="price_asc">Menor preço anunciado</option>
+                <option value="delivery_asc">Entrega mais rápida</option>
+                <option value="distance_asc">Menor distância</option>
+                <option value="rating_desc">Melhor avaliação</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="results-layout">
+          <!-- Sidebar de Filtros (sem recarregar página) -->
+          <aside class="filters-panel" id="filters-panel" aria-label="Filtros de resultados">
+            <div class="filters-head">
+              <h3>Filtros</h3>
+              <button type="button" class="link-btn" id="btn-clear-filters">Limpar</button>
+            </div>
+
+            <div class="filter-group">
+              <label>Faixa de preço (R$)</label>
+              <div class="range-inputs">
+                <input type="number" id="f-price-min" placeholder="Mín" min="0" step="10" />
+                <input type="number" id="f-price-max" placeholder="Máx" min="0" step="10" />
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-store">Loja / Marketplace</label>
+              <select id="f-store"><option value="">Todas as lojas</option></select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-condition">Condição</label>
+              <select id="f-condition">
+                <option value="">Todas</option>
+                <option value="new">Novo</option>
+                <option value="seminovo">Seminovo / OpenBox</option>
+                <option value="refurbished">Recondicionado</option>
+                <option value="used">Usado</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-brand">Marca</label>
+              <select id="f-brand"><option value="">Todas as marcas</option></select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-category">Categoria</label>
+              <select id="f-category"><option value="">Todas as categorias</option></select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-max-delivery">Prazo máximo de entrega</label>
+              <select id="f-max-delivery">
+                <option value="">Qualquer prazo</option>
+                <option value="2">Até 2 dias úteis</option>
+                <option value="5">Até 5 dias úteis</option>
+                <option value="10">Até 10 dias úteis</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-max-distance">Distância máxima (aprox.)</label>
+              <select id="f-max-distance">
+                <option value="">Qualquer distância</option>
+                <option value="10">Até 10 km</option>
+                <option value="25">Até 25 km</option>
+                <option value="50">Até 50 km</option>
+                <option value="100">Até 100 km</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="f-min-rating">Avaliação mínima</label>
+              <select id="f-min-rating">
+                <option value="">Qualquer avaliação</option>
+                <option value="3">3.0+ estrelas</option>
+                <option value="4">4.0+ estrelas</option>
+                <option value="4.5">4.5+ estrelas</option>
+              </select>
+            </div>
+
+            <div class="filter-checks">
+              <label class="check-row">
+                <input type="checkbox" id="f-free-shipping" />
+                <span>Apenas frete grátis</span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="f-pickup" />
+                <span>Com retirada presencial</span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="f-warranty" />
+                <span>Com garantia informada</span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="f-exact-only" />
+                <span>Ocultar modelos divergentes</span>
+              </label>
+            </div>
+          </aside>
+
+          <!-- Lista de Ofertas -->
+          <div class="offers-column">
+            <div id="offers-list" class="offers-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- View: Favoritos -->
+    <section class="container view-section hidden" id="view-favorites">
+      <div class="section-head">
+        <div>
+          <h2>Meus Favoritos</h2>
+          <p class="muted" id="favorites-notice"></p>
+        </div>
+        <button type="button" class="btn btn-outline" id="btn-back-from-favs">Voltar</button>
+      </div>
+      <div id="favorites-list" class="offers-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Price Hunter</strong> — Comparador inteligente de preços e oportunidades por CEP.
+      </div>
+      <div class="muted">
+        Dados obtidos de APIs oficiais/públicas autorizadas. Links direcionam à loja original.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Reutilizável -->
+  <div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Detalhes</h3>
+        <button type="button" class="icon-close" id="modal-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast de Feedback -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
